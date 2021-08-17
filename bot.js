@@ -12,15 +12,15 @@ bot.start((ctx) => {
 bot.on('text', ( ctx ) => {
     // getTableInfo( ctx );
     // addTableInfo( ctx );
-    // updateTableInfo( ctx );
-    const {first_name, id } = ctx.update.message.from;
-    console.log("\nctx");
-    console.log(ctx);
-    console.log("\nfrom");
-    console.log(ctx.update.message.from);
-    console.log("\nchat");
-    console.log(ctx.update.message.chat);
-    bot.telegram.sendContact(ctx.chat.id, "+79639449443", first_name);
+    updateTableInfo( ctx );
+    // const {first_name, id } = ctx.update.message.from;
+    // console.log("\nctx");
+    // console.log(ctx);
+    // console.log("\nfrom");
+    // console.log(ctx.update.message.from);
+    // console.log("\nchat");
+    // console.log(ctx.update.message.chat);
+    // bot.telegram.sendContact(ctx.chat.id, "+79639449443", first_name);
 });
 
 bot.launch();
