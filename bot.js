@@ -4,16 +4,18 @@ const TIMEOUT = 300000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx) => {
-	console.log('asdf');
-	ctx.reply('Просто начни писать @verter21_bot текст на любом канале.');
+	if (ctx.chat.type === 'private') {
+		ctx.reply('Просто начни писать @verter21_bot текст на любом канале.');
+	}
 })
 
-/*
 bot.on('sticker', (ctx) => {
-    console.log('ctx', ctx);
-	console.log('ctx', ctx.message);
+    // console.log('ctx', ctx);
 });
-*/
+
+bot.on('text', (ctx) => {
+    // console.log('ctx', ctx);
+});
 
 bot.on('inline_query', async (ctx) => {
     const result = Math.round((Math.random() * 100) * (Math.random() * 4) * 0.25);
