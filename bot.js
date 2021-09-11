@@ -4,6 +4,7 @@ const TIMEOUT = 300000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 bot.start((ctx) => {
+	console.log('asdf');
 	ctx.reply('Просто начни писать @verter21_bot текст на любом канале.');
 })
 
@@ -16,7 +17,7 @@ bot.on('sticker', (ctx) => {
 
 bot.on('inline_query', async (ctx) => {
     const result = Math.round((Math.random() * 100) * (Math.random() * 4) * 0.25);
-	const text = `<b>(Verter) Ваш результат: </b> ${ result >= 26 ? "Completed" : "Fail"} (${ 1.5 * result } XP, ${result}%)`;
+	const text = `<b>Мой результат: </b> ${ result >= 26 ? "Completed" : "Fail"} (${ 1.5 * result } XP, ${result}%)`;
 	return await ctx.answerInlineQuery([
 		{
 			type: 'sticker',
