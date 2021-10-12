@@ -106,7 +106,7 @@ function checkUpdate() {
 		// bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!');
 		bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
 		bot.telegram.sendSticker(424895349, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
-		console.log('test-1', first);
+		console.log('test-1', first, JSON.stringify({key: first}));
 		// clearInterval(handle);
         }
     });
