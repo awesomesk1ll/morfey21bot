@@ -5,10 +5,9 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
 
-const PORT = process.env.PORT || 8080;
-const URL = process.env.URL || 'https://verter-bot.kotfilm.tk/';
-
 let handle;
+let mail_date;
+let mail_name;
 
 const answer = (ctx, msg) => {
 	if (ctx.chat.type === 'private') {
@@ -98,15 +97,20 @@ bot.on('inline_query', async (ctx) => {
 function checkUpdate() {
     request({ method: 'GET', uri: 'https://archive.sendpulse.com/u/NzA5OTc3OQ==/Acb6c5583/', gzip: true}, function (error, response, body) {
         let rows = body.split(/<div class="send-date cell">/gm);
-        let first = rows[1] ? rows[1].replace(/\s*/, '').split(' г.')[0] : false;
-	if (first) {
-		if (first === '8 октября 2021') { // ничего не поменялось
-			console.log('Всё по старому.', first);
+        let date = rows[1] ? rows[1].replace(/\s*/, '').split('г.')[0] : false;
+        let name = rows[1] ? body.split(/<a target="_blank" title="/gm)[1].split('"')[0] : false;
+	if (date && name) {
+		if (!mail_name) {
+			mail_name = name;
+			mail_date = date;
+		}
+		if (mail_name === name) { // ничего не поменялось
+			console.log('Всё по старому.', date, name);
         	} else { // новая рассылочка Оп оп.
-			bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!\n// popcorn');
+			bot.telegram.sendMessage(-1001594852516, `А вот и письма полетели!\n${name}\n// popcorn`);
 			bot.telegram.sendSticker(-1001594852516, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
-			bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
-			clearInterval(handle);
+			bot.telegram.sendMessage(424895349, `Новая рассылка в ШК21!\n${name}`);
+			// clearInterval(handle);
         	}    
 	}
     });
