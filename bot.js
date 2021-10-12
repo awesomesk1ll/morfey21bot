@@ -6,9 +6,13 @@ const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
 
 const PORT = process.env.PORT || 3000;
-const URL = process.env.URL || 'https://morfey21bot.herokuapp.com';
-bot.telegram.setWebhook(`${URL}/bot${process.env.BOT_TOKEN}`);
-bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
+const URL = process.env.URL || 'https://verter-bot.kotfilm.tk/';
+
+bot.telegram.deleteWebhook().then(() => {
+	bot.telegram.setWebhook(`${URL}/bot${process.env.BOT_TOKEN}`);
+	bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
+});
+
 let handle;
 
 const answer = (ctx, msg) => {
@@ -96,7 +100,7 @@ bot.on('inline_query', async (ctx) => {
 	)
 });
 
-// bot.launch();
+bot.launch();
 
 function checkUpdate() {
     request({ method: 'GET', uri: 'https://archive.sendpulse.com/u/NzA5OTc3OQ==/Acb6c5583/', gzip: true}, function (error, response, body) {
