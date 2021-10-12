@@ -100,7 +100,7 @@ function checkUpdate() {
         let rows = body.split(/<div class="send-date cell">/gm);
         let first = rows[1].replace(/\s*/, '').split(' г.')[0];
         if (first === '8 октября 2021') { // ничего не поменялось
-		console.log('Всё по старому.');
+		console.log('Всё по старому.', first);
         } else { // новая рассылочка Оп оп.
 		bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!\n// popcorn');
 		bot.telegram.sendSticker(-1001594852516, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
