@@ -8,11 +8,6 @@ const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
 const PORT = process.env.PORT || 3000;
 const URL = process.env.URL || 'https://verter-bot.kotfilm.tk/';
 
-bot.telegram.deleteWebhook().then(() => {
-	bot.telegram.setWebhook(`${URL}/bot${process.env.BOT_TOKEN}`);
-	bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
-});
-
 let handle;
 
 const answer = (ctx, msg) => {
