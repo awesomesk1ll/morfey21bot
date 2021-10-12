@@ -2,12 +2,32 @@ require('dotenv').config();
 const { Telegraf } = require('telegraf');
 const TIMEOUT = 300000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
+const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
 
 const PORT = process.env.PORT || 3000;
 const URL = process.env.URL || 'https://morfey21bot.herokuapp.com';
 bot.telegram.setWebhook(`${URL}/bot${process.env.BOT_TOKEN}`);
-bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT)
+bot.startWebhook(`/bot${process.env.BOT_TOKEN}`, null, PORT);
+let handle;
+
+function checkUpdate() {
+    request({ method: 'GET', uri: 'https://archive.sendpulse.com/u/NzA5OTc3OQ==/Acb6c5583/', gzip: true}, function (error, response, body) {
+        let rows = body.split(/<div class="send-date cell">/gm);
+        let first = rows[1].replace(/\s*/, '').split('г.')[0];
+        if (first === '8 октября 2021') { // ничего не поменялось
+		bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
+		bot.telegram.sendSticker(424895349, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
+        } else { // новая рассылочка Оп оп.
+		// bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!');
+		bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
+		bot.telegram.sendSticker(424895349, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
+		clearInterval(handle);
+        }
+    });
+}
+
+handle = setInterval(checkUpdate, 10000);
 
 const answer = (ctx, msg) => {
 	if (ctx.chat.type === 'private') {
