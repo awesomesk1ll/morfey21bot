@@ -96,7 +96,7 @@ bot.on('inline_query', async (ctx) => {
 	)
 });
 
-bot.launch();
+// bot.launch();
 
 function checkUpdate() {
     request({ method: 'GET', uri: 'https://archive.sendpulse.com/u/NzA5OTc3OQ==/Acb6c5583/', gzip: true}, function (error, response, body) {
