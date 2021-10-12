@@ -100,8 +100,6 @@ bot.on('inline_query', async (ctx) => {
 	)
 });
 
-bot.launch();
-
 function checkUpdate() {
     request({ method: 'GET', uri: 'https://archive.sendpulse.com/u/NzA5OTc3OQ==/Acb6c5583/', gzip: true}, function (error, response, body) {
         let rows = body.split(/<div class="send-date cell">/gm);
@@ -119,3 +117,5 @@ function checkUpdate() {
 }
 
 handle = setInterval(checkUpdate, 10000);
+
+bot.launch();
