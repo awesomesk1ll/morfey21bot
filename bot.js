@@ -5,7 +5,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN);
 const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const URL = process.env.URL || 'https://verter-bot.kotfilm.tk/';
 
 let handle;
@@ -111,6 +111,6 @@ function checkUpdate() {
     });
 }
 
-handle = setInterval(checkUpdate, 10000);
+handle = setInterval(checkUpdate, 15000);
 
 bot.launch();
