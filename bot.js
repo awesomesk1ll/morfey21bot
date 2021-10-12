@@ -101,17 +101,16 @@ function checkUpdate() {
         let first = rows[1].replace(/\s*/, '').split(' г.')[0];
         if (first === '8 октября 2021') { // ничего не поменялось
 		console.log('Всё по старому.');
-		bot.telegram.sendMessage(424895349, '123');
-		bot.telegram.sendSticker(424895349, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
         } else { // новая рассылочка Оп оп.
-		// bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!');
+		bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!\n// popcorn');
+		bot.telegram.sendSticker(-1001594852516, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
 		bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
-		bot.telegram.sendSticker(424895349, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
+		
 		clearInterval(handle);
         }
     });
 }
 
-handle = setInterval(checkUpdate, 15000);
+handle = setInterval(checkUpdate, 5000);
 
 bot.launch();
