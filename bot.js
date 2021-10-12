@@ -98,16 +98,17 @@ bot.on('inline_query', async (ctx) => {
 function checkUpdate() {
     request({ method: 'GET', uri: 'https://archive.sendpulse.com/u/NzA5OTc3OQ==/Acb6c5583/', gzip: true}, function (error, response, body) {
         let rows = body.split(/<div class="send-date cell">/gm);
-        let first = rows[1].replace(/\s*/, '').split(' г.')[0];
-        if (first === '8 октября 2021') { // ничего не поменялось
-		console.log('Всё по старому.', first);
-        } else { // новая рассылочка Оп оп.
-		bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!\n// popcorn');
-		bot.telegram.sendSticker(-1001594852516, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
-		bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
-		
-		clearInterval(handle);
-        }
+        let first = rows[1] ? rows[1].replace(/\s*/, '').split(' г.')[0] : false;
+	if (first) {
+		if (first === '8 октября 2021') { // ничего не поменялось
+			console.log('Всё по старому.', first);
+        	} else { // новая рассылочка Оп оп.
+			bot.telegram.sendMessage(-1001594852516, 'А вот и письма полетели!\n// popcorn');
+			bot.telegram.sendSticker(-1001594852516, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
+			bot.telegram.sendMessage(424895349, 'А вот и письма полетели! Время для создания опроса xD');
+			clearInterval(handle);
+        	}    
+	}
     });
 }
 
