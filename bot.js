@@ -110,6 +110,8 @@ function checkUpdate() {
 			bot.telegram.sendMessage(-1001594852516, `А вот и письма полетели!\n${name}\n// popcorn`);
 			bot.telegram.sendSticker(-1001594852516, 'CAACAgIAAxkBAAO6YTxbnqeETfSPs4_v-Z6-ga0dnGEAAlwAA2RhcS7JLCyaQaq8TiAE');
 			bot.telegram.sendMessage(424895349, `Новая рассылка в ШК21!\n${name}`);
+			mail_name = name;
+			mail_date = date;
 			// clearInterval(handle);
         	}    
 	}
