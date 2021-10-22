@@ -206,7 +206,7 @@ const bot_init = async () => {
     bot.command('poolinfo', (ctx) => user_handler(ctx, async (ctx) => {
         if (+ctx.user.role >= CONFIRMED) {
             const nick = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1).split(/\s|@/)[0].toLowerCase() || ctx.user.nick;
-            const info = (+ctx.user.role >= ADMIN) ? await getPoolInfo( nick ) : await getPoolInfo( user.nick );
+            const info = (+ctx.user.role >= ADMIN) ? await getPoolInfo( nick ) : await getPoolInfo( ctx.user.nick );
             console.log('/poolinfo', `${ctx.user.username} ${ctx.user.first_name} ${ctx.user.last_name} -> ${ (+ctx.user.role >= ADMIN) ? nick : ctx.user.nick }`, !!info);
             if (info) {
                 const answer = `Информация о прохождении бассейна:\n\n`
