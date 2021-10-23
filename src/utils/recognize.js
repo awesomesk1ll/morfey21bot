@@ -2,7 +2,7 @@
 * Распознавание и форматирование значения (почта, юзернейм ТГ, ник платформы, телефон)
 */
 const MAIL = /^[a-z]+@student\.21-school\.ru$/;
-const USERNAME = /^@[a-z0-9_]+$/;
+const USERNAME = /^@[a-z0-9_\.]+$/;
 const NICK = /^[a-z]+$/;
 const NUM = /\d/g;
 
