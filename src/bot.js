@@ -417,6 +417,7 @@ function cmds(role) {
         { command: 'support', description: 'Техническая поддержка' },
     ];
     if (role >= REGISTERED) {
+        cmdlist.push({ command: 'setinsta', description: 'Указать инстаграм' });
         cmdlist.push({ command: 'setprivacy', description: 'Настройки отображения контактных данных' });
         cmdlist.push({ command: 'status', description: 'Установить сообщение в профиле' });
         cmdlist.push({ command: 'feedback', description: 'Оставить пожелание / отзыв / багрепорт' });
