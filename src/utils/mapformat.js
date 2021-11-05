@@ -123,9 +123,9 @@ const formatMapHistory = function (info, limit) {
                     }. ${
                         row.seat
                     } - c ${
-                        dayjs(row.from).format('HH:mm')
+                        dayjs.tz(row.from, 'Asia/Novosibirsk').format('HH:mm')
                     } по ${
-                        dayjs(row.to).format('HH:mm DD.MM')
+                        dayjs.tz(row.to, 'Asia/Novosibirsk').format('HH:mm DD.MM')
                     } - (${
                         formatDuration(row.to - row.from)
                 })`)
