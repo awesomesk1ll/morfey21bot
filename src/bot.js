@@ -186,7 +186,6 @@ const bot_init = async () => {
         if (+ctx.user.role >= REGISTERED) {
             const answer = `История изменений: \n\n${
                                 changelog
-                                    .reverse()
                                     .slice(0, 3)
                                     .map(note => `Версия: ${ note.version } от ${ note.date }\n${
                                         note.text.map((line, index) => `${ index + 1 }. ${ line }`).join('\n')
