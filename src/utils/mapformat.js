@@ -6,6 +6,7 @@ const dayjs = require('dayjs');
 const relativeTime = require('dayjs/plugin/relativeTime');
 const timezone = require('dayjs/plugin/timezone');
 const calendar = require('dayjs/plugin/calendar');
+const utc = require('dayjs/plugin/utc');
 const localizedFormat = require('dayjs/plugin/localizedFormat');
 const ru = require('dayjs/locale/ru');
 
@@ -13,6 +14,7 @@ dayjs.extend(timezone);
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
 dayjs.extend(calendar);
+dayjs.extend(utc);
 dayjs.locale(ru);
 dayjs.tz.setDefault("Asia/Novosibirsk");
 
@@ -52,7 +54,7 @@ const formatMapData = function (info) {
     // console.log('mapuser', info.user.place, info.user.changed, info.updated);
     let cluster = info.user.place ? info.user.place.slice(0, 2) : false;
     let seat = info.user.place ? info.user.place.slice(3) : false;
-    let changed = info.user.changed ? dayjs(+info.user.changed) : false;
+    let changed = info.user.changed ? dayjs.tz(+info.user.changed, 'Asia/Novosibirsk') : false;
     let updated = info.updated ? dayjs(+info.updated) : false;
     let last_session = info.user.last_uptime ? +info.user.last_uptime : false;
     // console.log('info', info);
@@ -70,7 +72,7 @@ const formatMapData = function (info) {
         format += `\nКластер: ${ CLUSTERS[cluster].name } (${ CLUSTERS[cluster].path })\nМесто: ${
                         seat.toUpperCase()
                     }\nПришёл: ${
-                        changed.calendar(dayjs(), {
+                        changed.calendar(null, {
                             sameDay: '[cегодня] в HH:mm',
                             lastDay: '[вчера] в HH:mm',
                             sameElse: 'DD.MM.YYYY в HH:mm',
@@ -80,7 +82,7 @@ const formatMapData = function (info) {
         format += '\nОтсутствует в кампусе (или не за компом).';
         if (changed) {
             format += `\nУшёл ${ 
-                        changed.calendar(dayjs(), {
+                        changed.calendar(null, {
                             sameDay: '[cегодня] в HH:mm',
                             lastDay: '[вчера] в HH:mm',
                             sameElse: 'DD.MM.YYYY в HH:mm',
