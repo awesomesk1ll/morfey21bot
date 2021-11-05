@@ -48,7 +48,7 @@ const formatDuration = (ms) => {
 }
 
 const formatMapData = function (info) {
-    console.log('campus', CLUSTERS);
+    // console.log('campus', CLUSTERS);
     // console.log('mapuser', info.user.place, info.user.changed, info.updated);
     let cluster = info.user.place ? info.user.place.slice(0, 2) : false;
     let seat = info.user.place ? info.user.place.slice(3) : false;
