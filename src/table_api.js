@@ -2,15 +2,24 @@ const { GoogleSpreadsheet } = require('google-spreadsheet');
 const { UNREGISTERED, WRONG } = require('./defs/roles');
 const { DEFAULT, NICKNAME, PHONE } = require('./defs/input_modes');
 const Queue = require('./utils/queue');
+const { CLUSTERS: CAMPUS } = require('./utils/mapformat');
 
 // Initialize the sheet - doc ID is the long id in the sheets URL
 const g_sheet = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
 const SAVE_QUEUE_TIMER = +process.env.SAVE_QUEUE_TIMER || 1050;
-let users_sheet;
-let users;
-let pool_sheet;
-let pool;
+const MAP_UPDATE_TIMER = +process.env.MAP_UPDATE_TIMER || 61000;
+const BOT_MORFEY = 0, MAP_PARSER = 1;
+let users_sheet, users;
+let pool_sheet, pool;
+let map_sheet, map;
+let info_sheet, info;
 let save_process_handle;
+let map_update_process_handle;
+
+if (!process.env.SPREADSHEET_ID || !process.env.GOOGLE_KEY || !process.env.GOOGLE_MAIL || !process.env.USERS_SHEET_NAME || !process.env.POOL_SHEET_NAME || !process.env.MAP_SHEET_NAME || !process.env.INFO_SHEET_NAME) {
+    console.error('Please setup google tables .env variables.');
+    process.exit();
+}
 
 /**
 * Обработчик очереди на сохранение.
@@ -23,7 +32,24 @@ const users_save_queue_handler = () => {
 }
 
 /**
-* Получает данные из таблицы и инициализирует состояние в памяти.
+* Обновляет данные с карты.
+*/
+const map_update_handler = async () => {
+    clearTimeout(map_update_process_handle);
+    const tmp = await getRows(info_sheet);
+    if (tmp && Array.isArray(tmp) && (tmp[MAP_PARSER].status === 'ok')) {
+        info = tmp;
+        map = await getRows(map_sheet, true, true);
+        // console.log('campus', CAMPUS);
+        map_update_process_handle = setTimeout(map_update_handler, MAP_UPDATE_TIMER);
+    } else {
+        info[MAP_PARSER].status = 'fail';
+        console.log('FAILED', tmp);
+    }
+}
+
+/**
+* Получает данные из таблиц и инициализирует состояние в памяти.
 * @async
 */
 const data_init = async () => {
@@ -34,12 +60,22 @@ const data_init = async () => {
     await g_sheet.loadInfo();
     users_sheet = g_sheet.sheetsByTitle[process.env.USERS_SHEET_NAME];
     pool_sheet = g_sheet.sheetsByTitle[process.env.POOL_SHEET_NAME];
+    map_sheet = g_sheet.sheetsByTitle[process.env.MAP_SHEET_NAME];
     users = await getRows(users_sheet);
     console.log('// loaded users info');
     pool = await getRows(pool_sheet);
     console.log('// loaded pool info');
+    map = await getRows(map_sheet, true, true);
+    console.log('// loaded map info');
+    info_sheet = g_sheet.sheetsByTitle[process.env.INFO_SHEET_NAME];
+    info = await getRows(info_sheet, true);
+    console.log('// loaded services info');
+    info[BOT_MORFEY].status = 'ok';
+    info[BOT_MORFEY].update = (new Date()).getTime();
+    info[BOT_MORFEY].save();
 
     save_process_handle = setInterval(users_save_queue_handler, SAVE_QUEUE_TIMER);
+    map_update_process_handle = setTimeout(map_update_handler, MAP_UPDATE_TIMER);
 };
 
 /**
@@ -49,6 +85,9 @@ const data_init = async () => {
 process.on('SIGINT', async function() {
     console.log("Interrupt signal, trying to complete queue:", Queue.length());
     clearInterval(save_process_handle);
+    info[BOT_MORFEY].status = 'fail';
+    info[BOT_MORFEY].changed = (new Date()).getTime();
+    info[BOT_MORFEY].save();
     await Queue.items.forEach(async (item) => {
         await users[item].save();
     });
@@ -57,13 +96,40 @@ process.on('SIGINT', async function() {
 
 /**
 * Получает данные из таблицы.
-* @param {object} apiClient - google spreadsheets обжект.
-* @param {string} range - имя листа/диапазон.
+* @param {object} sheet - google spreadsheets обжект.
+* @param {boolean} parseHistory - необходимость парсить .history.
 * @async
 * @returns {Array<Array>} (матрица данных)
 */
-const getRows = async ( sheet ) => {
-    return await sheet.getRows();
+const getRows = async ( sheet, parseHistory, campus ) => {
+    const rows = await sheet.getRows();
+    rows.forEach((row) => {
+        if (parseHistory) {
+            row._history = row.history ? JSON.parse(row.history) : [];
+        }
+        if (campus && row.place) {
+            CAMPUS[row.place.slice(0, 2)]._students.push({
+                nick: row.nick,
+                level: row.level,
+                exp: row.exp,
+                seat: row.place,
+                changed: row.changed,
+                last_uptime: row.last_uptime,
+            });
+        }        
+    });
+    if (campus) {
+        for (cluster in CAMPUS) {
+            let exp = 0;
+            CAMPUS[cluster]._students.forEach((stud) => { exp += +stud.exp; });
+            CAMPUS[cluster].students = CAMPUS[cluster]._students;
+            CAMPUS[cluster]._students = [];
+            CAMPUS[cluster].free = CAMPUS[cluster].capacity - CAMPUS[cluster].students.length;
+            CAMPUS[cluster].avg_exp = CAMPUS[cluster].students.length ? Math.floor(exp / CAMPUS[cluster].students.length) : 0;
+        }
+    }
+    
+    return rows;
 };
 
 /**
@@ -207,11 +273,28 @@ const getPoolInfo = async ( nick ) => {
     return ( rowIndex >= 0 ) ? pool[rowIndex] : false;
 };
 
+/**
+* Находит информацию по карте (если не находит -> false).
+* @param {string} nick - ник школы 21.
+* @returns {object|false} информация из pool или false
+*/
+const getMapInfo = async ( nick ) => {
+    let rowIndex = findRowIndex( map, 'nick', nick );
+
+    const status = (info[MAP_PARSER].status === 'ok');
+    const updated = info[MAP_PARSER].update ? +info[MAP_PARSER].update : false;
+
+    // console.log('asdasd', status, updated);
+
+    return ( rowIndex >= 0 ) ? { user: map[rowIndex], status, updated } : false;
+};
+
 module.exports = {
     data_init,
     getUserInfo,
     updateUserData,
     getPoolInfo,
+    getMapInfo,
     getUserInfoByNick,
     getUserInfoByPhone,
     getUserInfoByUsername,

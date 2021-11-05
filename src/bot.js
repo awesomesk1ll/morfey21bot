@@ -1,14 +1,22 @@
 require('dotenv').config();
 const { Telegraf } = require('telegraf');
-const { data_init, getUserInfo, updateUserData, getPoolInfo, getUserInfoByNick, getUserInfoByPhone, getUserInfoByUsername, delUserInfoByNick } = require('./table_api');
+const { data_init, getUserInfo, updateUserData, getPoolInfo, getMapInfo, getUserInfoByNick, getUserInfoByPhone, getUserInfoByUsername, delUserInfoByNick } = require('./table_api');
 const { proof_keyboard, registration_keyboard, privacy_keyboard } = require('./inline_keyboards');
 const { BANNED, UNREGISTERED, WRONG, REGISTERED, CONFIRMED, MODERATOR, ADMIN, OWNER } = require('./defs/roles');
 const { DEFAULT, NICKNAME, PHONE, IG, STATUS, FEEDBACK } = require('./defs/input_modes');
 const recognize = require('./utils/recognize');
+const { formatMapData, formatMapHistory, formatClustersData } = require('./utils/mapformat'); // mapFormat
 const changelog = require('./defs/changelog');
 
+if (!process.env.PEERS || !process.env.NICKNAMES || !process.env.BOT_TOKEN) {
+    console.error('Please setup bot .env variables.');
+    process.exit();
+}
+
 const MODERATOR_IDS = process.env.MODERATORS.split(" ").map(id => +id);
-const NICKNAMES = process.env.NICKNAMES.split(" ");
+const MAP_HISTORY_LENGTH = +process.env.MAP_HISTORY_LENGTH || 15;
+const NICKNAMES = Object.fromEntries(process.env.NICKNAMES.split(' ').map((name) => [name, true]));
+const PEERS = Object.fromEntries(process.env.PEERS.split(' ').map((name) => [name, true]));
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 /**
@@ -33,7 +41,7 @@ const bot_init = async () => {
         if (+ctx.user.role == UNREGISTERED) {
             ctx.reply('Для использования бота необходимо пройти регистрацию.\n\nДля продолжения жми одну из кнопок под сообщением.', registration_keyboard(ctx.user));
         } else if (not_in(+ctx.user.role, [BANNED, WRONG])) {
-            ctx.reply('Список доступных команд - /cmdlist\nПоддержка - /support');
+            ctx.reply('Список доступных команд - /cmdlist\nПоддержка - @awesomesk1ll');
         }
     }));
 
@@ -123,17 +131,34 @@ const bot_init = async () => {
             found = await getUserInfoByPhone(recognize(ctx.update.message.contact.phone_number)?.value);
             if (found) {
                 let answer = '';
+                const mapInfo = await getMapInfo(found?.nick || 'not_found');
                 const privacy = JSON.parse(ctx.user.privacy);
                 if (privacy.tg || found.status) {
                     answer += (found.nick ? found.nick : '')
                         + ((privacy.tg && found.username) ? ` (@${ found.username })` : '')
                         + (found.status ? `: ${ found.status }` : '');
                 }
+                if (privacy.contact && found.phone) {
+                    if (found.username) {
+                        answer += `\nИмя: ${ found.first_name || '' } ${ found.last_name || '' }\nНомер: +${ found.phone }`;
+                    } else {
+                        await bot.telegram
+                        .sendContact(ctx.update.message.from.id, found.phone, `${found.first_name} ${found.last_name}${found.nick ? (' (' + found.nick + ')') : ''}`)
+                        .catch((err) => {
+                            answer += `\nИмя: ${ found.first_name || '' } ${ found.last_name || '' }\nНомер: +${ found.phone }`;
+                            console.log('TG API unavailable for', err.response.parameters.retry_after);
+                        });
+                    }
+
+                }
                 if (privacy.ig && found.ig) {
                     answer += `\nIG: https://www.instagram.com/${ found.ig }/`;
                 }
-                if (privacy.contact && found.phone) {
-                    await bot.telegram.sendContact(ctx.update.message.from.id, found.phone, `${found.first_name} ${found.last_name}${found.nick ? (' (' + found.nick + ')') : ''}`);
+                if (mapInfo) {
+                    if (!mapInfo.status) {
+                        bot.telegram.sendMessage(MODERATOR_IDS[0], 'Сломался парсер карты, @awesomesk1ll');
+                    }
+                    answer += `\n\n` + formatMapData(mapInfo).format;
                 }
                 ctx.reply(answer || `Доступная для отображения информация по ${ input.value } отсутствует.`);
             } else {
@@ -144,7 +169,7 @@ const bot_init = async () => {
 
     bot.command('support', (ctx) => user_handler(ctx, async (ctx) => {
         if (not_in(+ctx.user.status, [BANNED, WRONG])) {
-            bot.telegram.sendContact(ctx.update.message.from.id, '79639449443', 'Техническая поддержка');
+            ctx.reply('По любым проблемам с ботом пиши @awesomesk1ll');
         }
     }));
     
@@ -166,14 +191,14 @@ const bot_init = async () => {
                                     .map(note => `Версия: ${ note.version } от ${ note.date }\n${
                                         note.text.map((line, index) => `${ index + 1 }. ${ line }`).join('\n')
                                     }`).join('\n\n')
-                            }\n\nАвтор: @awesomesk1ll`;
+                            }\n\nАвтор: mugroot - @awesomesk1ll`;
             ctx.reply(answer);
         }
     }));
 
     bot.command('status', (ctx) => user_handler(ctx, async (ctx) => {
         console.log('/status', ctx.user.id, ctx.user.first_name, ctx.user.last_name, ctx.user.username, ctx.user.nick, ctx.user.role);
-        if (+ctx.user.role >= REGISTERED) {
+        if (+ctx.user.role >= REGISTERED && (ctx.message.text.trim()[0] === '/')) {
             //const info = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1);
             await updateUserData(ctx.user.id, 'input_mode', STATUS);
             ctx.reply('Теперь напиши сообщение для статуса.');
@@ -203,11 +228,40 @@ const bot_init = async () => {
         }
     }));
 
+    bot.command('maphistory', (ctx) => user_handler(ctx, async (ctx) => {
+        console.log('/maphistory', ctx.user.id, ctx.user.first_name, ctx.user.last_name, ctx.user.username, ctx.user.nick, ctx.user.role);
+        if (+ctx.user.role >= REGISTERED) {
+            let nick = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1).split(/\s|@/)[0].toLowerCase() || ctx.user.nick;
+            if (+ctx.user.role < ADMIN) {
+                nick = ctx.user.nick;
+            }
+            const mapInfo = PEERS[nick] ? await getMapInfo( nick ) : false;
+
+            let text = formatMapHistory(mapInfo, MAP_HISTORY_LENGTH);
+            if (+ctx.user.role >= ADMIN) {
+                text = `${ nick } - ` + text;
+            }
+            ctx.reply(text);
+        }
+    }));
+
+    bot.command('campus', (ctx) => user_handler(ctx, async (ctx) => {
+        console.log('/campus', ctx.user.id, ctx.user.first_name, ctx.user.last_name, ctx.user.username, ctx.user.nick, ctx.user.role);
+        if (+ctx.user.role >= REGISTERED) {
+            // const mapInfo = await getMapInfo( 'mugroot' );
+            let text = formatClustersData();
+            ctx.replyWithHTML(text);
+        }
+    }));
+
     bot.command('poolinfo', (ctx) => user_handler(ctx, async (ctx) => {
         if (+ctx.user.role >= CONFIRMED) {
-            const nick = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1).split(/\s|@/)[0].toLowerCase() || ctx.user.nick;
-            const info = (+ctx.user.role >= ADMIN) ? await getPoolInfo( nick ) : await getPoolInfo( ctx.user.nick );
-            console.log('/poolinfo', `${ctx.user.username} ${ctx.user.first_name} ${ctx.user.last_name} -> ${ (+ctx.user.role >= ADMIN) ? nick : ctx.user.nick }`, !!info);
+            let nick = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1).split(/\s|@/)[0].toLowerCase() || ctx.user.nick;
+            if (+ctx.user.role < ADMIN) {
+                nick = ctx.user.nick;
+            }
+            const info = await getPoolInfo( nick );
+            console.log('/poolinfo', `${ctx.user.username} ${ctx.user.first_name} ${ctx.user.last_name} -> ${ nick }`, !!info);
             if (info) {
                 const answer = `Информация о прохождении бассейна:\n\n`
                     + `Ник: ${info.name} - ${info.month}\n`
@@ -232,13 +286,11 @@ const bot_init = async () => {
                         + ` - БД и данные: ${info['DB & Data']}\n`;
                 ctx.reply(answer).then(() => {
                     if (+ctx.user.role < ADMIN) {
-                        ctx.reply('Если в данных имеется ошибка - пиши в суппорт. /support');
+                        ctx.reply('Если в данных имеется ошибка - пиши в суппорт. @awesomesk1ll');
                     }
                 });
             } else {
-                ctx.reply('Ошибка получения информации по бассейну. Пиши в саппорт.').then(() => {
-                    bot.telegram.sendContact(ctx.update.message.from.id, '79639449443', 'Техническая поддержка');
-                });
+                ctx.reply('Ошибка получения информации по бассейну. Пиши @awesomesk1ll.');
             }
         }
     }));
@@ -247,7 +299,7 @@ const bot_init = async () => {
         if (+ctx.user.role >= OWNER || +ctx.user.id === MODERATOR_IDS[0]) {
             const nick = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1).split(/\s|@/)[0].toLowerCase() || "";
             if (nick) {
-                if (NICKNAMES.includes(nick)) {
+                if (NICKNAMES[nick] || PEERS[nick]) {
                     const data = await getUserInfoByNick(nick);
                     console.log('/delete', `${ctx.user.username} ${ctx.user.first_name} ${ctx.user.last_name} ${ctx.user.nick} -> ${nick} (${ data ? 'found': 'not found'})`);
                     if (data) {
@@ -272,7 +324,7 @@ const bot_init = async () => {
             const nick = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1).split(/\s|@/)[0].toLowerCase() || "";
             const role = +ctx.message.text.substring(ctx.message.text.length-2) || 0;
             if (nick) {
-                if (NICKNAMES.includes(nick)) {
+                if (NICKNAMES[nick] || PEERS[nick]) {
                     const found = await getUserInfoByNick(nick);
                     console.log('/setrole', `${ctx.user.username} ${ctx.user.first_name} ${ctx.user.last_name} ${ctx.user.nick} -> ${nick} (${ found ? 'found': 'not found'})`);
                     if (found) {
@@ -310,7 +362,7 @@ const bot_init = async () => {
             if (+ctx.user.role === UNREGISTERED && +ctx.user.input_mode === NICKNAME) {
                 const input = recognize(ctx.message.text);
                 if (input && (input.type === 'mail' || input.type === 'nick')) {
-                    if (NICKNAMES.includes(input.value)) {
+                    if (NICKNAMES[input.value] || PEERS[input.value]) {
                         await updateUserData(ctx.update.message.from.id, 'nick', input.value);
                         if (+ctx.user.role == WRONG) {
                             ctx.reply('Ошибка установки ника: обратись за помощью к модератору.').then(() => {
@@ -336,8 +388,12 @@ const bot_init = async () => {
                 const input = recognize(ctx.message.text);
                 let found, answer = '';
                 if (input) {
-                    if (input.type === 'mail' || input.type === 'nick') {
-                        if (NICKNAMES.includes(input.value)) {
+                    if (input.type === 'cluster') {
+                        // const mapInfo = await getMapInfo( 'mugroot' );
+                        found = input.value;
+                        answer = formatClustersData(false, found);
+                    } else if (input.type === 'mail' || input.type === 'nick') {
+                        if (NICKNAMES[input.value] || PEERS[input.value]) {
                             found = await getUserInfoByNick(input.value);
                         } else {
                             answer = 'Указан несуществующий ник.';
@@ -348,20 +404,42 @@ const bot_init = async () => {
                         found = await getUserInfoByUsername(input.value);
                     }
 
-                    if (found) {
-                        const privacy = JSON.parse(found.privacy);
-                        if (privacy.tg || found.status) {
-                            answer += (found.nick ? found.nick : '')
-                                + ((privacy.tg && found.username) ? ` (@${ found.username })` : '')
-                                + (found.status ? `: ${ found.status }` : '');
+                    if (found || PEERS[input.value]) {
+                        if (input.type !== 'cluster') {
+                            const mapInfo = await getMapInfo(found?.nick || input.value);
+                            const privacy = found?.privacy ? JSON.parse(found.privacy) : false;
+                            if (privacy.tg || found.status) {
+                                answer += (found.nick ? found.nick : '')
+                                    + ((privacy.tg && found.username) ? ` (@${ found.username })` : '')
+                                    + (found.status ? `: ${ found.status }` : '');
+                            }
+                            if (privacy.contact && found.phone) {
+                                if (found.username) {
+                                    answer += `\nИмя: ${ found.first_name || '' } ${ found.last_name || '' }\nНомер: +${ found.phone }`;
+                                } else {
+                                    await bot.telegram
+                                    .sendContact(ctx.update.message.from.id, found.phone, `${found.first_name} ${found.last_name}${found.nick ? (' (' + found.nick + ')') : ''}`)
+                                    .catch((err) => {
+                                        answer += `\nИмя: ${ found.first_name || '' } ${ found.last_name || '' }\nНомер: +${ found.phone }`;
+                                        console.log('TG API unavailable for', err.response.parameters.retry_after);
+                                    });
+                                }
+    
+                            }
+                            if (privacy.ig && found.ig) {
+                                answer += `\nIG: https://www.instagram.com/${ found.ig }/`;
+                            }
+                            if (mapInfo) {
+                                if (!mapInfo.status) {
+                                    bot.telegram.sendMessage(MODERATOR_IDS[0], 'Сломался парсер карты, @awesomesk1ll');
+                                }
+                                answer += `\n\n` + formatMapData(mapInfo).format;
+                            }
                         }
-                        if (privacy.ig && found.ig) {
-                            answer += `\nIG: https://www.instagram.com/${ found.ig }/`;
+                        if (!answer) {
+                            answer = `Доступная для отображения информация по ${ input.value } отсутствует.`;
                         }
-                        if (privacy.contact && found.phone) {
-                            await bot.telegram.sendContact(ctx.update.message.from.id, found.phone, `${found.first_name} ${found.last_name}${found.nick ? (' (' + found.nick + ')') : ''}`);
-                        }
-                        ctx.reply(answer || `Доступная для отображения информация по ${ input.value } отсутствует.`);
+                        ctx.replyWithHTML(answer);
                     } else {
                         await ctx.reply(answer || `Доступная для отображения информация по ${ input.value } отсутствует.`);
                     }
@@ -417,6 +495,8 @@ function cmds(role) {
         { command: 'support', description: 'Техническая поддержка' },
     ];
     if (role >= REGISTERED) {
+        cmdlist.push({ command: 'campus', description: 'Показать заполнение кампуса' });
+        cmdlist.push({ command: 'maphistory', description: 'Вывести историю сессий в кампусе' });
         cmdlist.push({ command: 'setinsta', description: 'Указать инстаграм' });
         cmdlist.push({ command: 'setprivacy', description: 'Настройки отображения контактных данных' });
         cmdlist.push({ command: 'status', description: 'Установить сообщение в профиле' });

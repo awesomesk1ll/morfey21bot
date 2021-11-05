@@ -5,12 +5,16 @@ const MAIL = /^[a-z]+@student\.21-school\.ru$/;
 const USERNAME = /^@[a-z0-9_\.]+$/;
 const NICK = /^[a-z]+$/;
 const NUM = /\d/g;
+const CLUSTER = /^(in|ob|si|ge|ex|pr|tr|se|cl)$/;
 
 module.exports = function (input) {
     let res = {};
     input = input.trim().toLowerCase();
 
-    if (NICK.test(input)) {
+    if (CLUSTER.test(input)) {
+        res.value = input;
+        res.type = 'cluster';
+    } else if (NICK.test(input)) {
         res.value = input;
         res.type = 'nick';
     } else if (MAIL.test(input)) {
