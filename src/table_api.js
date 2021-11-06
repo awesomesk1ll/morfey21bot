@@ -10,7 +10,6 @@ const g_sheet = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
 const SAVE_QUEUE_TIMER = +process.env.SAVE_QUEUE_TIMER || 1050;
 const MAP_UPDATE_TIMER = +process.env.MAP_UPDATE_TIMER || 61000;
 const GFORM_URL = process.env.GFORM_URL || '';
-const GFORM_SKIP;
 const BOT_MORFEY = 0, MAP_PARSER = 1;
 let users_sheet, users;
 let pool_sheet, pool;
@@ -18,6 +17,7 @@ let map_sheet, map;
 let info_sheet, info;
 let save_process_handle;
 let map_update_process_handle;
+let GFORM_SKIP;
 
 if (!process.env.SPREADSHEET_ID || !process.env.GOOGLE_KEY || !process.env.GOOGLE_MAIL || !process.env.USERS_SHEET_NAME || !process.env.POOL_SHEET_NAME || !process.env.MAP_SHEET_NAME || !process.env.INFO_SHEET_NAME) {
     console.error('Please setup google tables .env variables.');
