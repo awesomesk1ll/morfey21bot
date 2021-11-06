@@ -10,6 +10,7 @@ const g_sheet = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
 const SAVE_QUEUE_TIMER = +process.env.SAVE_QUEUE_TIMER || 1050;
 const MAP_UPDATE_TIMER = +process.env.MAP_UPDATE_TIMER || 61000;
 const GFORM_URL = process.env.GFORM_URL || '';
+const GFORM_SKIP;
 const BOT_MORFEY = 0, MAP_PARSER = 1;
 let users_sheet, users;
 let pool_sheet, pool;
@@ -133,7 +134,9 @@ const getRows = async ( sheet, parseHistory, campus ) => {
             metrics.all += metrics[cluster];
         }
         if (GFORM_URL) {
-            send(GFORM_URL, metrics, mapping);
+            if (!GFORM_SKIP) GFORM_SKIP = 10;
+            if (GFORM_SKIP % 5 === 0) send(GFORM_URL, metrics, mapping);
+            GFORM_SKIP--;
         }
     }
     
