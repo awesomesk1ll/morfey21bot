@@ -3,11 +3,13 @@ const { UNREGISTERED, WRONG } = require('./defs/roles');
 const { DEFAULT, NICKNAME, PHONE } = require('./defs/input_modes');
 const Queue = require('./utils/queue');
 const { CLUSTERS: CAMPUS } = require('./utils/mapformat');
+const { send, mapping } = require('./utils/gform');
 
 // Initialize the sheet - doc ID is the long id in the sheets URL
 const g_sheet = new GoogleSpreadsheet(process.env.SPREADSHEET_ID);
 const SAVE_QUEUE_TIMER = +process.env.SAVE_QUEUE_TIMER || 1050;
 const MAP_UPDATE_TIMER = +process.env.MAP_UPDATE_TIMER || 61000;
+const GFORM_URL = process.env.GFORM_URL || '';
 const BOT_MORFEY = 0, MAP_PARSER = 1;
 let users_sheet, users;
 let pool_sheet, pool;
@@ -119,6 +121,7 @@ const getRows = async ( sheet, parseHistory, campus ) => {
         }        
     });
     if (campus) {
+        const metrics = { all: 0 };
         for (cluster in CAMPUS) {
             let exp = 0;
             CAMPUS[cluster]._students.forEach((stud) => { exp += +stud.exp; });
@@ -126,6 +129,11 @@ const getRows = async ( sheet, parseHistory, campus ) => {
             CAMPUS[cluster]._students = [];
             CAMPUS[cluster].free = CAMPUS[cluster].capacity - CAMPUS[cluster].students.length;
             CAMPUS[cluster].avg_exp = CAMPUS[cluster].students.length ? Math.floor(exp / CAMPUS[cluster].students.length) : 0;
+            metrics[cluster] = CAMPUS[cluster].students.length || 0;
+            metrics.all += metrics[cluster];
+        }
+        if (GFORM_URL) {
+            send(GFORM_URL, metrics, mapping);
         }
     }
     
