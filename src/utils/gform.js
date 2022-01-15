@@ -12,23 +12,39 @@ const mapping = {
     si: 'entry.1543949548',
     all: 'entry.559269391',
 }
+let previousData = {};
 
-const send = async (url, data, entries) => {
-    const payload = {};
-    for (key in data) {
-        if (entries[key]) {
-            payload[entries[key]] = data[key];
+let isEqualData = (firstData, secondData) => {
+    let res = true;
+    for (property in firstData) {
+        if (firstData[property] != secondData[property]) {
+            res = false;
+            break;
         }
     }
-    
-    return await request.post(url).type('form').send(payload)
-                        .end((err, res) => {
-                            if (err || !res.ok) {
-                                return false;
-                            } else {
-                                return true;
-                            }
-                        });
+    return res;
+}
+
+const send = async (url, data, entries) => {
+    if (!isEqualData(data, previousData)) {
+        previousData = data;
+        const payload = {};
+        for (key in data) {
+            if (entries[key]) {
+                payload[entries[key]] = data[key];
+            }
+        }
+        
+        return await request.post(url).type('form').send(payload)
+                            .end((err, res) => {
+                                if (err || !res.ok) {
+                                    return false;
+                                } else {
+                                    return true;
+                                }
+                            });
+    }
+    return true;
 }
 
 module.exports = {
