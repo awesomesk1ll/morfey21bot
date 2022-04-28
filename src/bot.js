@@ -8,7 +8,7 @@ const recognize = require('./utils/recognize');
 const { formatMapData, formatMapHistory, formatClustersData } = require('./utils/mapformat'); // mapFormat
 const changelog = require('./defs/changelog');
 
-if (!process.env.PEERS || !process.env.NICKNAMES || !process.env.BOT_TOKEN) {
+if (!process.env.OLD_MAIN || !process.env.NEW_MAIN || !process.env.NICKNAMES || !process.env.BOT_TOKEN) {
     console.error('Please setup bot .env variables.');
     process.exit();
 }
@@ -16,7 +16,7 @@ if (!process.env.PEERS || !process.env.NICKNAMES || !process.env.BOT_TOKEN) {
 const MODERATOR_IDS = process.env.MODERATORS.split(" ").map(id => +id);
 const MAP_HISTORY_LENGTH = +process.env.MAP_HISTORY_LENGTH || 15;
 const NICKNAMES = Object.fromEntries(process.env.NICKNAMES.split(' ').map((name) => [name, true]));
-const PEERS = Object.fromEntries(process.env.PEERS.split(' ').map((name) => [name, true]));
+const PEERS = Object.fromEntries([...process.env.OLD_MAIN.split(' '), ...process.env.NEW_MAIN.split(' ')].map((name) => [name, true]));
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
 /**
