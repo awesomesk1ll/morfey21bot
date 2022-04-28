@@ -21,7 +21,6 @@ const NEW_MAIN = Object.fromEntries(process.env.NEW_MAIN.split(' ').map((name) =
 const PEERS = Object.fromEntries([...Object.keys(OLD_MAIN), ...Object.keys(NEW_MAIN)].map((name) => [name, true]));
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-module.exports = { OLD_MAIN, NEW_MAIN };
 
 /**
 * Инициализирует данные (в table_api.js) и затем навешивает слушатели телеграфа.
@@ -162,7 +161,7 @@ const bot_init = async () => {
                     if (!mapInfo.status) {
                         bot.telegram.sendMessage(MODERATOR_IDS[0], 'Сломался парсер карты, @awesomesk1ll');
                     }
-                    answer += `\n\n` + formatMapData(mapInfo).format;
+                    answer += `\n\n` + formatMapData(mapInfo, OLD_MAIN).format;
                 }
                 ctx.reply(answer || `Доступная для отображения информация по ${ input.value } отсутствует.`);
             } else {

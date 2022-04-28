@@ -9,7 +9,6 @@ const calendar = require('dayjs/plugin/calendar');
 const utc = require('dayjs/plugin/utc');
 const localizedFormat = require('dayjs/plugin/localizedFormat');
 const ru = require('dayjs/locale/ru');
-const { OLD_MAIN, NEW_MAIN } = require('../bot');
 
 dayjs.extend(timezone);
 dayjs.extend(relativeTime);
@@ -50,7 +49,7 @@ const formatDuration = (ms) => {
     return res.join(' ');
 }
 
-const formatMapData = function (info) {
+const formatMapData = function (info, OLD_MAIN) {
     // console.log('campus', CLUSTERS);
     // console.log('mapuser', info.user.place, info.user.changed, info.updated);
     let cluster = info.user.place ? info.user.place.slice(0, 2) : false;
