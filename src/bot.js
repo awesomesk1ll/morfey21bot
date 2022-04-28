@@ -435,7 +435,7 @@ const bot_init = async () => {
                                 if (!mapInfo.status) {
                                     bot.telegram.sendMessage(MODERATOR_IDS[0], 'Сломался парсер карты, @awesomesk1ll');
                                 }
-                                answer += `\n\n` + formatMapData(mapInfo).format;
+                                answer += `\n\n` + formatMapData(mapInfo, OLD_MAIN).format;
                             }
                         }
                         if (!answer) {
