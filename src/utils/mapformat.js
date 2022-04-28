@@ -65,7 +65,7 @@ const formatMapData = function (info) {
     // console.log('updated', updated);
 
     let format = `Инфа из кампуса (получена ${ updated.fromNow() })\n`
-               + `Ник: ${ info.user.nick } (${OLD_MAIN[info.user.nick] ? 'старенький' : 'новенький'})\n`
+               + (`Ник: ${ info.user.nick } (${OLD_MAIN[info.user.nick] ? 'старенький' : 'новенький'})\n`)
                + `${ info.user.level ? ('Уровень: ' + info.user.level + '\n') : '' }`
                + `${ info.user.exp ? ('Опыт: ' + info.user.exp + ' XP\n') : '' }`;
 
