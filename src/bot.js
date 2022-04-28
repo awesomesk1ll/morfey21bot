@@ -16,8 +16,12 @@ if (!process.env.OLD_MAIN || !process.env.NEW_MAIN || !process.env.NICKNAMES || 
 const MODERATOR_IDS = process.env.MODERATORS.split(" ").map(id => +id);
 const MAP_HISTORY_LENGTH = +process.env.MAP_HISTORY_LENGTH || 15;
 const NICKNAMES = Object.fromEntries(process.env.NICKNAMES.split(' ').map((name) => [name, true]));
-const PEERS = Object.fromEntries([...process.env.OLD_MAIN.split(' '), ...process.env.NEW_MAIN.split(' ')].map((name) => [name, true]));
+const OLD_MAIN = Object.fromEntries(process.env.OLD_MAIN.split(' ').map((name) => [name, true]));
+const NEW_MAIN = Object.fromEntries(process.env.NEW_MAIN.split(' ').map((name) => [name, true]));
+const PEERS = Object.fromEntries([...Object.keys(OLD_MAIN), ...Object.keys(NEW_MAIN)].map((name) => [name, true]));
 const bot = new Telegraf(process.env.BOT_TOKEN);
+
+module.exports = { OLD_MAIN, NEW_MAIN };
 
 /**
 * Инициализирует данные (в table_api.js) и затем навешивает слушатели телеграфа.

@@ -9,6 +9,7 @@ const calendar = require('dayjs/plugin/calendar');
 const utc = require('dayjs/plugin/utc');
 const localizedFormat = require('dayjs/plugin/localizedFormat');
 const ru = require('dayjs/locale/ru');
+const { OLD_MAIN, NEW_MAIN } = require('../bot');
 
 dayjs.extend(timezone);
 dayjs.extend(relativeTime);
@@ -64,7 +65,7 @@ const formatMapData = function (info) {
     // console.log('updated', updated);
 
     let format = `Инфа из кампуса (получена ${ updated.fromNow() })\n`
-               + `Ник: ${ info.user.nick }\n`
+               + `Ник: ${ info.user.nick } (${OLD_MAIN[info.user.nick] ? 'старенький' : 'новенький'})\n`
                + `${ info.user.level ? ('Уровень: ' + info.user.level + '\n') : '' }`
                + `${ info.user.exp ? ('Опыт: ' + info.user.exp + ' XP\n') : '' }`;
 
