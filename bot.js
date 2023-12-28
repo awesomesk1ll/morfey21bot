@@ -4,7 +4,7 @@ const TIMEOUT = 300000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
-const MODERATOR_IDS = process.env.MODERATORS?.split(" ")?.map(id => +id) || [];
+const MODERATOR_IDS = (process.env?.MODERATORS?.split(" ")?.map(id => +id)) || [];
 
 let handle;
 let mail_date;
