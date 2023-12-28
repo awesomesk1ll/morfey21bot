@@ -4,6 +4,7 @@ const TIMEOUT = 300000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
+const MODERATOR_IDS = process.env.MODERATORS?.split(" ")?.map(id => +id) || [];
 
 let handle;
 let mail_date;
@@ -28,25 +29,26 @@ bot.start((ctx) => {
 
 // chat id -1001594852516
 bot.command('del', (ctx) => {
-    if (ctx.chat.type != 'private') {
-		const delete_id = ctx.message.message_id;
-		bot.telegram.deleteMessage(-1001594852516, delete_id).then(action => {
-			console.log(`Сообщение [ID:${delete_id}] удалено.`);
-		}).catch(err => {
-			console.log(`Не получилось удалить сообщение [ID:${delete_id}].`);
-		})
-
-		targetId
-	}
-	const targetId = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1);
-	console.log(ctx.message.from);
-	console.log('targetId', targetId);
-	if (targetId) {
-		bot.telegram.deleteMessage(-1001594852516, targetId).then(action => {
-			console.log(`Сообщение [ID:${targetId}] удалено.`);
-		}).catch(err => {
-			console.log(`Не получилось удалить сообщение [ID:${targetId}].`);
-		})
+	console.log('trying to delete msg, userid', ctx.message.from.id);
+	if (MODERATOR_IDS.includes(ctx.message.from.id)) {
+		if (ctx.chat.type != 'private') {
+			const delete_id = ctx.message.message_id;
+			bot.telegram.deleteMessage(-1001594852516, delete_id).then(action => {
+				console.log(`Сообщение [ID:${delete_id}] удалено.`);
+			}).catch(err => {
+				console.log(`Не получилось удалить сообщение [ID:${delete_id}].`);
+			})
+		}
+		const targetId = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1);
+		console.log(ctx.message.from);
+		console.log('targetId', targetId);
+		if (targetId) {
+			bot.telegram.deleteMessage(-1001594852516, targetId).then(action => {
+				console.log(`Сообщение [ID:${targetId}] удалено.`);
+			}).catch(err => {
+				console.log(`Не получилось удалить сообщение [ID:${targetId}].`);
+			})
+		}
 	}
 });
 
