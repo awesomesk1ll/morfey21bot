@@ -4,7 +4,7 @@ const TIMEOUT = 300000;
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const request = require('request');
 const admRegex = /админ|aдмин|admin|аdmin|adмin/i;
-const MODERATOR_IDS = (process.env?.MODERATORS?.split(" ")?.map(id => +id)) || [];
+const MODERATOR_IDS = (process.env?.MODERATORS?.split?.(" ")?.map?.(id => +id)) || [];
 
 let handle;
 let mail_date;
@@ -39,7 +39,7 @@ bot.command('del', (ctx) => {
 				console.log(`Не получилось удалить сообщение [ID:${delete_id}].`);
 			})
 		}
-		const targetId = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1);
+		const targetId = +(ctx.message.text?.split(/ |\//g)?.at(-1) ?? 0);
 		console.log(ctx.message.from);
 		console.log('targetId', targetId);
 		if (targetId) {
