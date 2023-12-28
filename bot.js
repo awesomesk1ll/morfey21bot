@@ -31,7 +31,6 @@ bot.start((ctx) => {
 bot.command('del', (ctx) => {
 	console.log('trying to delete msg, userid', ctx.message.from.id);
 	if (MODERATOR_IDS.includes(ctx.message.from.id)) {
-		console.log('AAA', JSON.stringify({ m: ctx.message, c: ctx.chat.update }))
 		if (ctx.chat.type != 'private') {
 			const delete_id = ctx.message.message_id;
 			bot.telegram.deleteMessage(-1001594852516, delete_id).then(action => {
@@ -43,7 +42,7 @@ bot.command('del', (ctx) => {
 		let targetId;
 		if (ctx.message?.reply_to_message) {
 			const chat_id = ctx.message.reply_to_message.chat.id;
-			targetId = chat_id === -1001594852516 ? ctx.message.reply_to_message.message_id : false;
+			targetId = (chat_id === -1001594852516) ? ctx.message.reply_to_message.message_id : false;
 		} else {
 			targetId = +(ctx.message.text?.split(/ |\//g)?.at(-1)?.replace('del', '') ?? 0);
 		}
@@ -151,6 +150,6 @@ function checkUpdate() {
     });
 }
 
-handle = setInterval(checkUpdate, 5000);
+handle = setInterval(checkUpdate, 12000);
 
 bot.launch();
