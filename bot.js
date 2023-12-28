@@ -31,6 +31,7 @@ bot.start((ctx) => {
 bot.command('del', (ctx) => {
 	console.log('trying to delete msg, userid', ctx.message.from.id);
 	if (MODERATOR_IDS.includes(ctx.message.from.id)) {
+		console.log('AAA', JSON.stringify({ m: ctx.message, c: ctx.chat.update }))
 		if (ctx.chat.type != 'private') {
 			const delete_id = ctx.message.message_id;
 			bot.telegram.deleteMessage(-1001594852516, delete_id).then(action => {
