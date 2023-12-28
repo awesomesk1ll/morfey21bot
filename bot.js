@@ -43,7 +43,7 @@ bot.command('del', (ctx) => {
 		let targetId;
 		if (ctx.message?.reply_to_message) {
 			const chat_id = ctx.message.reply_to_message.chat.id;
-			const targetId = ctx.message.reply_to_message.message_id;
+			targetId = ctx.message.reply_to_message.message_id;
 		} else {
 			targetId = +(ctx.message.text?.split(/ |\//g)?.at(-1)?.replace('del', '') ?? 0);
 		}
