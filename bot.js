@@ -27,6 +27,30 @@ bot.start((ctx) => {
 });
 
 // chat id -1001594852516
+bot.command('del', (ctx) => {
+    if (ctx.chat.type != 'private') {
+		const delete_id = ctx.message.message_id;
+		bot.telegram.deleteMessage(-1001594852516, delete_id).then(action => {
+			console.log(`Сообщение [ID:${delete_id}] удалено.`);
+		}).catch(err => {
+			console.log(`Не получилось удалить сообщение [ID:${delete_id}].`);
+		})
+
+		targetId
+	}
+	const targetId = ctx.message.text.substring(ctx.message.text.split(' ')[0].length + 1);
+	console.log(ctx.message.from);
+	console.log('targetId', targetId);
+	if (targetId) {
+		bot.telegram.deleteMessage(-1001594852516, targetId).then(action => {
+			console.log(`Сообщение [ID:${targetId}] удалено.`);
+		}).catch(err => {
+			console.log(`Не получилось удалить сообщение [ID:${targetId}].`);
+		})
+	}
+});
+
+// chat id -1001594852516
 bot.command('status', (ctx) => {
     if (ctx.chat.type != 'private') {
 		const delete_id = ctx.message.message_id;
